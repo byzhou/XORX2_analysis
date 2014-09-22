@@ -45,7 +45,7 @@ for i = 2 : bitnum
 
     for j = 1 : sampleRate
 
-        if ((volt_srcB1(i - 1) | volt_srcB2(i - 1)) & volt_srcA(i - 1))
+        if (volt_srcB1(i - 1) ^ volt_srcA(i - 1))
             currVolt = 'V_hig';
         else
             currVolt = 'V_low';

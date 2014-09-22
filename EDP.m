@@ -16,7 +16,6 @@ fprintf('Hspice tool box has been successfully loaded.\n');
 data_path   = '../hspice_data/OAI21_nangate45.tr0';
 srcA_path   = '../vsrc_files/function_check_vsrc_a_0.txt';
 srcB1_path  = '../vsrc_files/function_check_vsrc_b1_0.txt';
-srcB2_path  = '../vsrc_files/function_check_vsrc_b2_0.txt';
 
 x           = loadsig(data_path);
 
@@ -24,15 +23,12 @@ x           = loadsig(data_path);
 
 data_srcA   = load ( srcA_path , '-regexp' , '%d %d\n' );
 data_srcB1  = load ( srcB1_path , '-regexp' , '%d %d\n' );
-data_srcB2  = load ( srcB2_path , '-regexp' , '%d %d\n' );
 
 time_srcA   = data_srcA(:,1) / 1e9;
 time_srcB1  = data_srcB1(:,1) / 1e9;
-time_srcB2  = data_srcB2(:,1) / 1e9;
 
 volt_srcA   = data_srcA(:,2);
 volt_srcB1  = data_srcB1(:,2);
-volt_srcB2  = data_srcB2(:,2);
 
 vdd             = 1;
 
@@ -41,11 +37,9 @@ time            = evalsig(x , 'TIME');
 Energy          = evalsig(x , 'vpower');
 buff_input_a    = evalsig(x , 'a');
 buff_input_b1   = evalsig(x , 'b1');
-buff_input_b2   = evalsig(x , 'b2');
 
 buff_output_a   = evalsig(x , 'a_in');
 buff_output_b1  = evalsig(x , 'b1_in');
-buff_output_b2  = evalsig(x , 'b2_in');
 
 gate_output     = evalsig(x , 'output');
 
@@ -97,25 +91,17 @@ for i = 2 : (bitnum - 1)
             k = k + 1;
         end
     elseif  (buff_output_b1(i) == 1) & (buff_output_b1(i + 1) == 0)
-        while (k < size(time , 1)) & (time(j) < period * bitnum) & (buff_output_a(j) > (vdd / 2))
+        while (k < size(time , 1)) & (time(j) < period * bitnum) & (buff_output_b1(j) > (vdd / 2))
             k = k + 1;
         end
     elseif  (buff_output_b1(i) == 0) & (buff_output_b1(i + 1) == 1)
-        while (k < size(time , 1)) & (time(j) < period * bitnum) & (buff_output_a(j) < (vdd / 2))
-            k = k + 1;
-        end
-    elseif  (buff_output_b2(i) == 1) & (buff_output_b2(i + 1) == 0)
-        while (k < size(time , 1)) & (time(j) < period * bitnum) & (buff_output_a(j) > (vdd / 2))
-            k = k + 1;
-        end
-    elseif  (buff_output_b2(i) == 0) & (buff_output_b2(i + 1) == 1)
-        while (k < size(time , 1)) & (time(j) < period * bitnum) & (buff_output_a(j) < (vdd / 2))
+        while (k < size(time , 1)) & (time(j) < period * bitnum) & (buff_output_b1(j) < (vdd / 2))
             k = k + 1;
         end
     end
 
-    previous_result     =  ~((volt_srcB1(i)  | volt_srcB2(i)) & volt_srcA(i));
-    current_result      =  ~((volt_srcB1(i + 1) | volt_srcB2(i + 1)) & volt_srcA(i + 1));
+    previous_result     =  (volt_srcB1(i) ^ volt_srcA(i));
+    current_result      =  (volt_srcB1(i + 1) ^ volt_srcA(i + 1));
 
 %    fprintf('voltage A %d %d, voltage B1 %d, voltage B2 %d\n', i,  volt_srcA(i), volt_srcB1(i), volt_srcB2(i));
 %    fprintf('previous_result %d, current_result %d, gate_output %d\n', previous_result, current_result, gate_output(i));
@@ -156,8 +142,8 @@ end_time        = datestr(now,'mm-dd-yyyy HH:MM:SS FFF');
 EDP             = (delay / bitnum * energy_consump);
 
 %display the start and end time
-disp(strcat('Start times----------------',start_time));
-disp(strcat('End times------------------',end_time));
+disp(strcat('Start time-----------------',start_time));
+disp(strcat('End time-------------------',end_time));
 
 %display energy consumption
 disp(strcat('file_path------------------',data_path));
@@ -165,7 +151,7 @@ fprintf(strcat('Delay_avg------------------',int2str(delay / bitnum), '%5.12e \n
 disp(strcat('energy consumption---------',num2str(energy_consump)));
 fprintf('EDP------------------------%5.9e\n', EDP);
 
-path = '../EDP_data/OAI21X2.dat';
+path = '../EDP_data/XORX2.dat';
 fid = fopen ( path , 'a' );
 
 if (fid == -1)
